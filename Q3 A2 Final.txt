@@ -1,0 +1,95 @@
+#include <iostream>
+#include <fstream>
+#include <unordered_set>
+#include <sstream>
+using namespace std;
+
+struct Transaction {
+    int transactionId;
+    int transactionAmount;
+    Transaction* next;
+};
+
+struct TransactionList {
+    Transaction* start;
+
+    TransactionList() : start(nullptr) {}
+
+    void addTransaction(int id, int amount) {
+        Transaction* newTransaction = new Transaction;
+        newTransaction->transactionId = id;
+        newTransaction->transactionAmount = amount;
+        newTransaction->next = start;
+        start = newTransaction;
+    }
+
+    void reverseFraudTransaction(const unordered_set<int>& fraudIds) {
+        Transaction* curr = start;
+        Transaction* prev = nullptr;
+
+        while (curr) {
+            if (fraudIds.find(curr->transactionId) != fraudIds.end()) {
+                // Found a fraud transaction, remove it from the list
+                Transaction* temp = curr;
+                curr = curr->next;
+                if (prev) {
+                    prev->next = curr;
+                } else {
+                    start = curr;
+                }
+                delete temp;
+            } else {
+                prev = curr;
+                curr = curr->next;
+            }
+        }
+    }
+
+    void printTransactions(const unordered_set<int>& fraudIds) {
+        Transaction* curr = start;
+        while (curr) {
+            if (fraudIds.find(curr->transactionId) == fraudIds.end()) {
+                cout << curr->transactionId << "," << curr->transactionAmount << endl;
+            }
+            curr = curr->next;
+        }
+    }
+};
+
+int main() {
+    TransactionList transactions;
+    unordered_set<int> fraudIds;
+
+    ifstream inputFile("input.txt");
+
+    if (!inputFile.is_open()) {
+        cout << "Failed to open input file." << endl;
+        return 1;
+    }
+
+    int numberOfTransactions, numberOfFraudulentTransactions;
+    inputFile >> numberOfTransactions >> numberOfFraudulentTransactions;
+
+    for (int i = 0; i < numberOfTransactions; ++i) {
+        int id, amount;
+        char comma;
+        inputFile >> id >> comma >> amount;
+        transactions.addTransaction(id, amount);
+    }
+
+    for (int i = 0; i < numberOfFraudulentTransactions; ++i) {
+        int fraudId;
+        inputFile >> fraudId;
+        fraudIds.insert(fraudId);
+    }
+
+    inputFile.close();
+
+    // Reverse fraud transactions
+    transactions.reverseFraudTransaction(fraudIds);
+
+    // Print the remaining transactions (non-fraudulent)
+    transactions.printTransactions(fraudIds);
+
+    return 0;
+}

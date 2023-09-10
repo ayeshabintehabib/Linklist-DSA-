@@ -1,0 +1,116 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+class Node {
+public:
+    int data;
+    Node* next;
+
+    Node(int val) : data(val), next(nullptr) {}
+};
+
+class LuckyWinnerRestaurant {
+private:
+    Node* start;
+    Node* curr;
+    Node* mid1;
+    Node* mid2;
+    int size;
+
+public:
+    LuckyWinnerRestaurant() : start(nullptr), curr(nullptr), mid1(nullptr), mid2(nullptr), size(0) {}
+
+    void addCustomer(int number) {
+        Node* newCustomer = new Node(number);
+        newCustomer->next = nullptr;
+
+        if (start == nullptr) {
+            start = newCustomer;
+        } else {
+            Node* temp = start;
+            while (temp->next) {
+                temp = temp->next;
+            }
+            temp->next = newCustomer;
+        }
+        size++;
+
+        if (size == 1) {
+            mid1 = start;
+        } else if (size == 2) {
+            mid2 = start;
+        } else if (size % 2 == 1) {
+            mid1 = mid1->next;
+        } else {
+            mid2 = mid2->next;
+        }
+    }
+
+    void deleteCustomer() {
+        if (size == 0) {
+            return;
+        } else if (size == 1) {
+            delete start;
+            start = nullptr;
+            mid1 = nullptr;
+            mid2 = nullptr;
+        } else {
+            Node* temp = start;
+            while (temp->next->next) {
+                temp = temp->next;
+            }
+            delete temp->next;
+            temp->next = nullptr;
+        }
+        size--;
+
+        if (size == 0) {
+            mid1 = nullptr;
+            mid2 = nullptr;
+        } else if (size % 2 == 0) {
+            mid2 = mid2->next;
+        }
+    }
+
+    void getTrump() {
+        if (size == 0) {
+            cout << "No customers" << endl;
+        } else if (size % 2 == 1) {
+            cout << "Lucky winner: " << mid1->data << endl;
+        } else {
+            cout << "Lucky winners: " << mid1->data << " and " << mid2->data << endl;
+        }
+    }
+};
+
+int main() {
+    LuckyWinnerRestaurant restaurant;
+
+    string command;
+    int number;
+
+    ifstream inputFile("input.txt");
+
+    if (!inputFile.is_open()) {
+        cout << "Failed to open input file." << endl;
+        return 1;
+    }
+
+    while (inputFile >> command) {
+        if (command == "ADD") {
+            inputFile >> number;
+            restaurant.addCustomer(number);
+        } else if (command == "DELETE") {
+            restaurant.deleteCustomer();
+        } else if (command == "END") {
+            break;
+        }
+    }
+
+    inputFile.close();
+
+    restaurant.getTrump();
+
+    return 0;
+}

@@ -1,0 +1,79 @@
+#include <iostream>
+#include <fstream>
+
+struct Node {
+    int data;
+    Node* next;
+};
+
+struct MedianCalculator {
+    Node* start;
+    int count;
+
+    void init() {
+        start = nullptr;
+        count = 0;
+    }
+
+    void insert(int data) {
+        Node* new_node = new Node;
+        new_node->data = data;
+
+        if (!start || data < start->data) {
+            new_node->next = start;
+            start = new_node;
+        } else {
+            Node* curr = start;
+            Node* prev = nullptr;
+
+            while (curr && data >= curr->data) {
+                prev = curr;
+                curr = curr->next;
+            }
+
+            prev->next = new_node;
+            new_node->next = curr;
+        }
+
+        count++;
+    }
+
+    double find_median() {
+        if (count == 0) {
+            return -1; // No elements in the stream
+        }
+
+        Node* slow = start;
+        Node* fast = start;
+        Node* prev = nullptr;
+
+        while (fast != nullptr && fast->next != nullptr) {
+            prev = slow;
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+
+        if (count % 2 == 1) {
+            return slow->data;
+        } else {
+            return (double)(prev->data + slow->data) / 2.0;
+        }
+    }
+};
+
+int main() {
+    MedianCalculator calculator;
+    calculator.init();
+
+    std::ifstream input_file("input.txt");
+    int data;
+
+    while (input_file >> data) {
+        calculator.insert(data);
+        std::cout << data << " Median: " << calculator.find_median() << std::endl;
+    }
+
+    input_file.close();
+
+    return 0;
+}

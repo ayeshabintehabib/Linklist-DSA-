@@ -1,0 +1,76 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+struct Node {
+    int ID;
+    Node* next;
+    Node* prev;
+};
+Node* start = NULL;
+
+void Move(int b) {
+    Node* temp = new Node;
+    temp->ID = b;
+    temp->next = NULL;
+    if (start == NULL) {
+        start = temp;
+        start->prev = NULL;
+    } else {
+        Node* curr = start;
+        while (curr->next != NULL) {
+            curr = curr->next;
+        }
+        curr->next = temp;
+        temp->prev = curr;
+    }
+}
+
+int Search() {
+    Node* curr = start;
+    int counter = 1;
+    while (curr->next != NULL) {
+        curr = curr->next;
+        counter = counter + 1;
+    }
+    if (counter <= 2) {
+        return -1;
+    }
+    curr = curr->prev;
+    return curr->prev->ID;
+}
+
+int main() {
+    int number;
+    int check = 0;
+    ifstream storefile("input.txt"); // Change the file name to "input.txt"
+
+    if (!storefile.is_open()) {
+        cout << "Failed to open input file." << endl;
+        return 1;
+    }
+
+    while (check != -1 && check != 10) {
+        storefile >> number;
+        Move(number);
+        check = storefile.get();
+    }
+
+    storefile.close();
+
+    int result = Search();
+    if (result != -1) {
+        cout << "Third last element: " << result << endl;
+    } else {
+        cout << -1 << endl; // Print -1 if less than three elements
+    }
+
+    // Clean up: Delete the linked list
+    while (start) {
+        Node* temp = start;
+        start = start->next;
+        delete temp;
+    }
+
+    return 0;
+}
