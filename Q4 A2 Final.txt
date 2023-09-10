@@ -1,0 +1,184 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stack>
+#include <vector>
+
+struct Node {
+    int data;
+    Node* next;
+    Node(int val) : data(val), next(nullptr) {}
+};
+
+struct Editor {
+    Node* head;
+    Node* cursor;
+    std::stack<Node*> undo_stack;
+
+    Editor() {
+        head = nullptr;
+        cursor = nullptr;
+    }
+
+    void add_number(int number) {
+        Node* new_node = new Node(number);
+        if (head == nullptr) {
+            head = new_node;
+            cursor = new_node;
+        } else {
+            cursor->next = new_node;
+            cursor = new_node;
+        }
+        undo_stack.push(head);
+    }
+
+    void deleteNode() {
+        if (head == nullptr) {
+            return;
+        }
+        Node* temp = head;
+        head = head->next;
+        delete temp;
+        cursor = head;
+        undo_stack.push(head);
+    }
+
+    void move_forward(int steps) {
+        for (int i = 0; i < steps; i++) {
+            if (cursor == nullptr) {
+                break;
+            }
+            cursor = cursor->next;
+        }
+        std::cout << "Cursor moved forward by " << steps << " step(s)." << std::endl;
+    }
+
+    void move_backward(int steps) {
+        for (int i = 0; i < steps; i++) {
+            if (cursor == nullptr || cursor == head) {
+                break;
+            }
+            Node* current = head;
+            while (current->next != cursor) {
+                current = current->next;
+            }
+            cursor = current;
+        }
+        std::cout << "Cursor moved backwards by " << steps << " step(s)." << std::endl;
+    }
+
+    void print() {
+        if (head == nullptr) {
+            std::cout << "List: []" << std::endl;
+            return;
+        }
+
+        Node* current = head;
+        std::cout << "List: [";
+        while (current != nullptr) {
+            if (current == cursor) {
+                std::cout << "[" << current->data << "]";
+            } else {
+                std::cout << current->data;
+            }
+
+            if (current->next != nullptr) {
+                std::cout << ", ";
+            }
+
+            current = current->next;
+        }
+        std::cout << "]" << std::endl;
+    }
+
+    void undo() {
+        if (undo_stack.size() > 1) {
+            undo_stack.pop();
+            head = undo_stack.top();
+            cursor = head;
+        }
+    }
+
+    void add_immediate(int number) {
+        if (cursor == nullptr) {
+            std::cout << "Cursor is null, cannot add immediately." << std::endl;
+            return;
+        }
+        Node* new_node = new Node(number);
+        new_node->next = cursor->next;
+        cursor->next = new_node;
+        cursor = new_node;
+        undo_stack.push(head);
+    }
+
+    void delete_immediate() {
+        if (cursor == nullptr || cursor->next == nullptr) {
+            std::cout << "No element to delete immediately." << std::endl;
+            return;
+        }
+        Node* temp = cursor->next;
+        cursor->next = temp->next;
+        delete temp;
+        undo_stack.push(head);
+    }
+};
+
+int main() {
+    Editor editor;
+
+    std::ifstream inputFile("input.txt");
+    if (!inputFile.is_open()) {
+        std::cerr << "Failed to open input file." << std::endl;
+        return 1;
+    }
+
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        std::stringstream ss(line);
+        std::string command;
+        ss >> command;
+
+        if (command == "Add") {
+            int number;
+            ss >> number;
+            editor.add_number(number);
+            editor.print();
+        } else if (command == "Delete") {
+            editor.deleteNode();
+            editor.print();
+        } else if (command == "Print") {
+            editor.print();
+        } else if (command == "MoveForward") {
+            int steps;
+            ss >> steps;
+            editor.move_forward(steps);
+            editor.print();
+        } else if (command == "MoveBackward") {
+            int steps;
+            ss >> steps;
+            editor.move_backward(steps);
+            editor.print();
+        } else if (command == "AddImmediate") {
+            int number;
+            ss >> number;
+            editor.add_immediate(number);
+            editor.print();
+        } else if (command == "DeleteImmediate") {
+            editor.delete_immediate();
+            editor.print();
+        } else if (command == "Undo") {
+            editor.undo();
+            editor.print();
+        } else {
+            std::cout << "Invalid command: " << command << std::endl;
+        }
+    }
+
+    inputFile.close();
+
+    return 0;
+}
+
+
+**the code works proper till 3 iterations only and respond to cursor statement but doesnt work further with more iterations or add statemnent
+**It does have some infinite loop that needs to stop so stay safe!
